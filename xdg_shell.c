@@ -235,6 +235,8 @@ handle_xdg_toplevel_map(struct wl_listener *listener, void *data)
 	if (xdg_shell_view->xdg_toplevel->app_id)
 		wlr_foreign_toplevel_handle_v1_set_app_id(view->foreign_toplevel_handle,
 							  xdg_shell_view->xdg_toplevel->app_id);
+	wlr_foreign_toplevel_handle_v1_set_fullscreen(view->foreign_toplevel_handle,
+						      xdg_shell_view->xdg_toplevel->current.fullscreen);
 	/* Activation state will be set by seat_set_focus */
 }
 
@@ -248,6 +250,13 @@ handle_xdg_toplevel_commit(struct wl_listener *listener, void *data)
 	}
 
 	wlr_xdg_toplevel_set_wm_capabilities(xdg_shell_view->xdg_toplevel, XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
+
+	if (xdg_shell_view->xdg_toplevel->requested.fullscreen) {
+		struct wlr_box layout_box;
+		wlr_output_layout_get_box(xdg_shell_view->view.server->output_layout, NULL, &layout_box);
+		wlr_xdg_toplevel_set_size(xdg_shell_view->xdg_toplevel, layout_box.width, layout_box.height);
+		wlr_xdg_toplevel_set_fullscreen(xdg_shell_view->xdg_toplevel, true);
+	}
 
 	/* When an xdg_surface performs an initial commit, the compositor must
 	 * reply with a configure so the client can map the surface. */
